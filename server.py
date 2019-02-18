@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 from service_stub import ServiceStub, ServiceProcedure
-
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
-import pandas as pd
 import numpy as np
 import shutil
 import csv
@@ -84,13 +82,17 @@ print('\nstarting server:')
 def predict(buying, maint, doors, persons, lug_boot, safety):
   return prediction(sess, y, [buying, maint, doors, persons, lug_boot, safety])
 
+def close():
+  exit()
+
 def service_setup(name=''):
   serv = ServiceStub(name)
   serv.add('str predict(str buying, str maint, str doors, str persons, str lug_boot, str safety)', predict)
+  serv.add('str close()', close)
   return serv
 
-addr = ('', 1995)
+addr = ('', 1992)
 midw = ('127.0.0.1', 1992)
 service = service_setup('memkart')
 print('Starting service on %s -> %s' % (addr, midw))
-service.start(('127.0.0.1', 1992))
+service.start(addr)

@@ -47,12 +47,12 @@ if o.local!='' and o.remote!='':
   
 print('\ninstalling python requirements:')
 requirements = o.remote+'/requirements.txt'
-stdin, stdout, stderr = ssh.exec_command('/usr/local/bin/pip install -r '+requirements)
+stdin, stdout, stderr = ssh.exec_command('/usr/local/bin/pip3 install --user -r '+requirements)
 stream_pipe(stdout, sys.stdout)
 stream_pipe(stderr, sys.stderr)
 
-print('\nstarting main.py:')
-main = o.remote+'/main.py'
-stdin, stdout, stderr = ssh.exec_command('python '+main)
+print('\nstarting server.py:')
+server = o.remote+'/server.py'
+stdin, stdout, stderr = ssh.exec_command('cd %s && /usr/local/bin/python3 %s' % (o.remote, server))
 stream_pipe(stdout, sys.stdout)
 stream_pipe(stderr, sys.stderr)
