@@ -1,6 +1,7 @@
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
+import pandas as pd
 import numpy as np
 import shutil
 import csv
@@ -52,6 +53,11 @@ def get_data(name, test_per):
   x, y = shuffle(x, y)
   return train_test_split(x, y, test_size=test_per)
 
+def predict(sess, y, row):
+  test_x = [attrib_numbers(row)]
+  test_y = [[1.0, 0.0, 0.0, 0.0]]
+  return NACCEPT[sess.run(tf.argmax(y,1), {x: test_x, y_: test_y})[0]]
+
 
 print('reading dataset:')
 inps, outs = (6, 4)
@@ -66,17 +72,12 @@ y = ann_network(x)
 cost_func = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y, labels=y_))
 train_step = tf.train.GradientDescentOptimizer(rate).minimize(cost_func)
 
-print('\nstarting training:')
-if os.path.exists(MODEL):
-  shutil.rmtree(MODEL)
-os.mkdir(MODEL)
+print('\nloading model:')
 sess = tf.Session()
 savr = tf.train.Saver()
 sess.run(tf.global_variables_initializer())
-for epoch in range(epochs):
-  sess.run(train_step, {x: train_x, y_: train_y})
-  pred = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
-  accr = tf.reduce_mean(tf.cast(pred, tf.float32))
-  accr_v = sess.run(accr, {x: train_x, y_: train_y})
-  print('Epoch %d: %f accuracy' % (epoch, accr_v))
-savr.save(sess, MODEL+'/car')
+savr.restore(sess, MODEL+'/car')
+
+print('\nstarting testing:')
+test_xrow = ['vhigh', 'med', '2', '4', 'small', 'high']
+print('pred =', predict(sess, y, test_xrow))
