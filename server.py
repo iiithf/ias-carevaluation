@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+from service_stub import ServiceStub, ServiceProcedure
+
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
@@ -6,7 +9,6 @@ import numpy as np
 import shutil
 import csv
 import os
-
 
 MODEL = 'build'
 NBUYING = ['vhigh', 'high', 'med', 'low']
@@ -53,7 +55,7 @@ def get_data(name, test_per):
   x, y = shuffle(x, y)
   return train_test_split(x, y, test_size=test_per)
 
-def predict(sess, y, row):
+def prediction(sess, y, row):
   test_x = [attrib_numbers(row)]
   test_y = [[1.0, 0.0, 0.0, 0.0]]
   return NACCEPT[sess.run(tf.argmax(y,1), {x: test_x, y_: test_y})[0]]
@@ -78,6 +80,17 @@ savr = tf.train.Saver()
 sess.run(tf.global_variables_initializer())
 savr.restore(sess, MODEL+'/car')
 
-print('\nstarting testing:')
-test_xrow = ['vhigh', 'med', '2', '4', 'small', 'high']
-print('pred =', predict(sess, y, test_xrow))
+print('\nstarting server:')
+def predict(buying, maint, doors, persons, lug_boot, safety):
+  return prediction(sess, y, [buying, maint, doors, persons, lug_boot, safety])
+
+def service_setup(name=''):
+  serv = ServiceStub(name)
+  serv.add('str predict(str buying, str maint, str doors, str persons, str lug_boot, str safety)', predict)
+  return serv
+
+addr = ('', 1995)
+midw = ('127.0.0.1', 1992)
+service = service_setup('memkart')
+print('Starting service on %s -> %s' % (addr, midw))
+service.start(('127.0.0.1', 1992))
