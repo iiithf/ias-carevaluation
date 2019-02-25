@@ -75,9 +75,27 @@ print('%d train rows, %d test rows' % (len(train_x), len(test_x)))
 
 print('\ndefining ann:')
 serialized_tf_example = tf.placeholder(tf.string, name='tf_example')
-feature_configs = {'x': tf.FixedLenFeature(shape=[6], dtype=tf.float32)}
+feature_configs = {
+  'buying': tf.FixedLenFeature(shape=1, dtype=tf.float32),
+  'maint': tf.FixedLenFeature(shape=1, dtype=tf.float32),
+  'doors': tf.FixedLenFeature(shape=1, dtype=tf.float32),
+  'persons': tf.FixedLenFeature(shape=1, dtype=tf.float32),
+  'lug_boot': tf.FixedLenFeature(shape=1, dtype=tf.float32),
+  'safety': tf.FixedLenFeature(shape=1, dtype=tf.float32),
+}
 tf_example = tf.parse_example(serialized_tf_example, feature_configs)
-x = tf.identity(tf_example['x'], name='x')
+print(tf_example['buying'])
+tf_example_x = tf.concat([
+  tf_example['buying'],
+  tf_example['maint'],
+  tf_example['doors'],
+  tf_example['persons'],
+  tf_example['lug_boot'],
+  tf_example['safety']
+], 1)
+print(tf_example['buying'])
+print(tf_example_x)
+x = tf.identity(tf_example_x, name='x')
 # x = tf.placeholder(tf.float32, [None, inps])
 y_ = tf.placeholder(tf.float32, [None, outs])
 y = ann_network(x)
