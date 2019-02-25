@@ -40,7 +40,7 @@ def ann_network(x):
   h1 = tf.nn.relu(ann_layer(x, [6, 48]))
   h2 = tf.nn.sigmoid(ann_layer(h1, [48, 48]))
   h3 = tf.nn.relu(ann_layer(h2, [48, 48]))
-  return ann_layer(h3, [48, 4], 'y')
+  return ann_layer(h3, [48, 4])
 
 
 def get_data(name, test_per):
@@ -53,25 +53,18 @@ def get_data(name, test_per):
   return train_test_split(x, y, test_size=test_per)
 
 def input_tensors(x):
-  buying = tf.saved_model.build_tensor_info(x[0])
-  maint = tf.saved_model.build_tensor_info(x[0])
-  doors = tf.saved_model.build_tensor_info(x[0])
-  persons = tf.saved_model.build_tensor_info(x[0])
-  lug_boot = tf.saved_model.build_tensor_info(x[0])
-  safety = tf.saved_model.build_tensor_info(x[0])
-  return {'buying': buying, 'maint': maint, 'doors': doors, 'persons': persons, 'lug_boot': lug_boot, 'safety': safety}
+  return {'inputs': tf.saved_model.build_tensor_info(x)}
 
 def classify_signature(x, y):
-  outputs = {'accept': tf.saved_model.build_tensor_info(y)}
-  return tf.saved_model.build_signature_def(input_tensors(x), outputs, 'classify')
+  inputs = {'inputs': tf.saved_model.utils.build_tensor_info(serialized_tf_example)}
+  outputs_classes = tf.saved_model.utils.build_tensor_info(prediction_classes)
+  outputs_scores = tf.saved_model.utils.build_tensor_info(values)
+  outputs = {'classes': outputs_classes, 'scores': outputs_scores}
+  return tf.saved_model.build_signature_def(input_tensors(x), outputs, 'tensorflow/serving/classify')
 
 def predict_signature(x, y):
-  unacc = tf.saved_model.build_tensor_info(y[0])
-  acc = tf.saved_model.build_tensor_info(y[1])
-  good = tf.saved_model.build_tensor_info(y[2])
-  vgood = tf.saved_model.build_tensor_info(y[3])
-  outputs = {'unacc': unacc, 'acc': acc, 'good': good, 'vgood': vgood}
-  return tf.saved_model.build_signature_def(input_tensors(x), outputs, 'predict')
+  outputs = {'scores': tf.saved_model.build_tensor_info(y)}
+  return tf.saved_model.build_signature_def(input_tensors(x), outputs, 'tensorflow/serving/predict')
 
 
 print('reading dataset:')
@@ -81,12 +74,20 @@ train_x, test_x, train_y, test_y = get_data('car.data', 0.2)
 print('%d train rows, %d test rows' % (len(train_x), len(test_x)))
 
 print('\ndefining ann:')
-x = tf.placeholder(tf.float32, [None, inps])
+serialized_tf_example = tf.placeholder(tf.string, name='tf_example')
+feature_configs = {'x': tf.FixedLenFeature(shape=[6], dtype=tf.float32)}
+tf_example = tf.parse_example(serialized_tf_example, feature_configs)
+x = tf.identity(tf_example['x'], name='x')
+# x = tf.placeholder(tf.float32, [None, inps])
 y_ = tf.placeholder(tf.float32, [None, outs])
 y = ann_network(x)
-y_class = tf.argmax(y, 1)
 cost_func = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y, labels=y_))
 train_step = tf.train.GradientDescentOptimizer(rate).minimize(cost_func)
+values, indices = tf.nn.top_k(y, 4)
+table = tf.contrib.lookup.index_to_string_table_from_tensor(
+  tf.constant([NACCEPT[i] for i in range(4)])
+)
+prediction_classes = table.lookup(tf.to_int64(indices))
 
 print('\nstarting training:')
 if os.path.exists(MODEL):
@@ -96,10 +97,10 @@ bldr = tf.saved_model.Builder(MODEL)
 sess.run(tf.global_variables_initializer())
 for epoch in range(epochs):
   sess.run(train_step, {x: train_x, y_: train_y})
-  pred = tf.equal(y_class, tf.argmax(y_,1))
+  pred = tf.equal(tf.argmax(y, 1), tf.argmax(y_,1))
   accr = tf.reduce_mean(tf.cast(pred, tf.float32))
   accr_v = sess.run(accr, {x: train_x, y_: train_y})
   print('Epoch %d: %f accuracy' % (epoch, accr_v))
-signatures = {'classify': classify_signature(x, y_class), 'predict': predict_signature(x, y)}
-bldr.add_meta_graph_and_variables(sess, ['serving'], signatures, main_op=tf.tables_initializer(), strip_default_attrs=True)
+signatures = {'serving_default': classify_signature(serialized_tf_example, y), 'predict': predict_signature(x, y)}
+bldr.add_meta_graph_and_variables(sess, ['serve'], signatures, main_op=tf.tables_initializer(), strip_default_attrs=True)
 bldr.save()
