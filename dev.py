@@ -71,7 +71,7 @@ if os.path.exists(MODEL):
   shutil.rmtree(MODEL)
 os.mkdir(MODEL)
 sess = tf.Session()
-savr = tf.train.Saver()
+# savr = tf.train.Saver()
 sess.run(tf.global_variables_initializer())
 for epoch in range(epochs):
   sess.run(train_step, {x: train_x, y_: train_y})
@@ -79,4 +79,4 @@ for epoch in range(epochs):
   accr = tf.reduce_mean(tf.cast(pred, tf.float32))
   accr_v = sess.run(accr, {x: train_x, y_: train_y})
   print('Epoch %d: %f accuracy' % (epoch, accr_v))
-savr.save(sess, MODEL+'/car')
+# savr.save(sess, MODEL+'/car')
