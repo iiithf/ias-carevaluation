@@ -2,7 +2,7 @@
 from http.client import HTTPConnection
 import optparse
 import json
-
+import time
 
 
 def parse_addr(addr):
@@ -35,15 +35,17 @@ p.add_option('--method', dest='method', help='set method to use')
 host, port = parse_addr(o.service)
 conn = HTTPConnection(host, port)
 print('CarEvaluation TF serving demo:\n')
-buying = input('buying price (vhigh, high, med, low):')
-maint = input('price of the maintenance (vhigh, high, med, low):')
-doors = input('number of doors (2, 3, 4, 5more):')
-persons = input('capacity in terms of persons to carry (2, 4, more):')
-lug_boot = input('the size of luggage boot (small, med, big):')
-safety = input('estimated safety of the car (low, med, high):')
+buying = 'vhigh' # input('buying price (vhigh, high, med, low):')
+maint = 'vhigh' # input('price of the maintenance (vhigh, high, med, low):')
+doors = '2' # input('number of doors (2, 3, 4, 5more):')
+persons = '2' # input('capacity in terms of persons to carry (2, 4, more):')
+lug_boot = 'small' # input('the size of luggage boot (small, med, big):')
+safety = 'low' # input('estimated safety of the car (low, med, high):')
 example = input_json(buying, maint, doors, persons, lug_boot, safety)
 
-print('\nresult:')
+start = time.time()
 results = classify(conn, o.model, o.method, example)
+end = time.time()
+print('\nresult in %3f seconds:' % (end-start))
 for r in results[0]:
   print('%s:' % r[0], r[1])
