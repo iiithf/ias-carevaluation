@@ -13,7 +13,13 @@ docker run -p 8501:8501 \
 # test with client
 python3 client.py
 python3 client_grpc.py
-```
 
+# host dataset as input service
+python3 input.py
+
+# use input service and model for inference
+# <input address> <model address>
+./inference.sh :1993 :8501
+```
 
 Time to make models!
