@@ -1,6 +1,4 @@
-# ias-carevaluation
-
-Car Evaluation client and server for Hackathon.
+Generate and use (REST, gRPC) Tensorflow serving model for Car Evaluation dataset.
 
 
 ## setup
@@ -17,7 +15,8 @@ docker run -p 8501:8501 \
 
 # test with client
 python3 client.py
+python3 client_grpc.py
 ```
 
 
-time to sleep!
+Time to make models!
