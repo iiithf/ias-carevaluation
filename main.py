@@ -3,8 +3,10 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import optparse
 import json
 import csv
+import os
 
 
+PORT = 8000
 CURSOR = 0
 INPUTS = []
 
@@ -45,9 +47,11 @@ class RequestHandler(BaseHTTPRequestHandler):
     return self.send_json(200, request)
 
 
+try: PORT = os.environ['PORT']
+except: None
 p = optparse.OptionParser()
-p.set_defaults(address=':1993', dataset='car.data')
-p.add_option('--address', dest='address', help='set input service address')
+p.set_defaults(port=PORT, dataset='car.data')
+p.add_option('--port', dest='port', help='set input service port')
 p.add_option('--dataset', dest='dataset', help='set dataset file')
 (o, args) = p.parse_args()
 
@@ -65,7 +69,7 @@ with open(o.dataset, 'r') as f:
       'safety': row[5]
     })
 
-addr = addr_parse(o.address)
+addr = ('', int(o.port))
 print('starting input service on ', addr)
 httpd = HTTPServer(addr, RequestHandler)
 httpd.serve_forever()
