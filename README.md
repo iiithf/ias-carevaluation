@@ -19,7 +19,7 @@ python3 input.py
 
 # use input service and model for inference
 # <input address> <model address>
-./inference.sh :1993 :8501
+./inference.sh 127.0.0.1:1993 127.0.0.1:8501
 ```
 
 Time to make models!
