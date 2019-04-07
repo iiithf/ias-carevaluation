@@ -4,10 +4,7 @@ import os
 
 ORG = 'iiithf'
 QUERY = ''
-DEVICE = ''
 try: QUERY = os.environ['QUERY']
-except: None
-try: DEVICE = os.environ['DEVICE']
 except: None
 
 
