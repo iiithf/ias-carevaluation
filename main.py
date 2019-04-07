@@ -6,8 +6,6 @@ import csv
 import os
 
 
-QUERY = ''
-ADDRESS = ''
 PORT = '8000'
 CURSOR = 0
 INPUTS = []
@@ -49,13 +47,8 @@ class RequestHandler(BaseHTTPRequestHandler):
     return self.send_json(200, request)
 
 
-try: QUERY = os.environ['QUERY']
-except: None
-try: ADDRESS = os.environ['ADDRESS']
-except: None
 try: PORT = os.environ['PORT']
 except: None
-
 p = optparse.OptionParser()
 p.set_defaults(port=PORT, dataset='car.data')
 p.add_option('--port', dest='port', help='set input service port')
@@ -79,7 +72,4 @@ with open(o.dataset, 'r') as f:
 addr = ('', int(o.port))
 httpd = HTTPServer(addr, RequestHandler)
 print('CAREVALUATION input started on ', addr)
-print('QUERY:', QUERY)
-print('ADDRESS:', ADDRESS)
-print('PORT:', PORT)
 httpd.serve_forever()
